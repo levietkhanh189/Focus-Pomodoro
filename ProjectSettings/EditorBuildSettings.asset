@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Samples/FaceMesh/FaceDetection.unity
-    guid: 60ee78610683e49afa385b780dcb680d
+    path: Assets/PomodoroApp/Scenes/MainApp.unity
+    guid: e06f86d6ec7e34da6a731da497286cee
   m_configObjects: {}

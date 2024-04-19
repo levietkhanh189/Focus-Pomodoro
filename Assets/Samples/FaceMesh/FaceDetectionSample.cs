@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections;
 /// <summary>
 /// BlazeFace from MediaPile
 /// https://github.com/google/mediapipe
@@ -69,7 +70,7 @@ public class FaceDetectionSample : MonoBehaviour
         inputPreview.rectTransform.GetWorldCorners(rtCorners);
         results = faceDetect.GetResults();
     }
-
+    float timeCounter;
     private void DrawResults(List<FaceDetect.Result> results)
     {
         if (results == null || results.Count == 0)
@@ -82,19 +83,54 @@ public class FaceDetectionSample : MonoBehaviour
 
         draw.color = Color.clear;
 
-        foreach (var result in results)
+        if(results.Count == 0)
         {
-            Rect rect = MathTF.Lerp((Vector3)min, (Vector3)max, result.rect.FlipY());
+            ModeManager.Instance.WarningPomodoroMode();
+            return;
+        }
+
+        if(results.Count > 0)
+        {
+            Rect rect = MathTF.Lerp((Vector3)min, (Vector3)max, results[0].rect.FlipY());
             draw.Rect(rect, 0.05f, -0.1f);
-            foreach (Vector2 p in result.keypoints)
+            foreach (Vector2 p in results[0].keypoints)
             {
                 draw.Point(math.lerp(min, max, new float3(p.x, 1f - p.y, 0)), -0.1f);
             }
             var noseKeyPoint = results[0].keypoints[(int)FaceDetect.KeyPoint.Nose];
             OnResult?.Invoke(results[0]);
-         //   UpdateNosePosition(noseKeyPoint);
-            debugText.text = "# You look " + result.GetLookDirection(0.075f).ToString();
+            FaceDetect.LookDirection direction = results[0].GetLookDirection(0.1f);
+
+            if (direction != FaceDetect.LookDirection.Forward)
+            {
+                timeCounter += 0.02f;
+                if (timeCounter > 10f)
+                {
+                    ModeManager.Instance.WarningPomodoroMode();
+                }
+                debugText.text = "# You look " + direction.ToString();
+            }
+            else
+            {
+                timeCounter = 0f;
+                debugText.text = "# You are focus ";
+            }
+
         }
+
+        //foreach (var result in results)
+        //{
+        //    Rect rect = MathTF.Lerp((Vector3)min, (Vector3)max, result.rect.FlipY());
+        //    draw.Rect(rect, 0.05f, -0.1f);
+        //    foreach (Vector2 p in result.keypoints)
+        //    {
+        //        draw.Point(math.lerp(min, max, new float3(p.x, 1f - p.y, 0)), -0.1f);
+        //    }
+        //    var noseKeyPoint = results[0].keypoints[(int)FaceDetect.KeyPoint.Nose];
+        //    OnResult?.Invoke(results[0]);
+        //    //   UpdateNosePosition(noseKeyPoint);
+        //    debugText.text = "# You look " + result.GetLookDirection(0.085f).ToString();
+        //}
         draw.Apply();
     }
 

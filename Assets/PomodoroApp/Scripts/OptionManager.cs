@@ -21,4 +21,12 @@ public class OptionManager : MonoBehaviour
         foreach (var item in optionButtons)
             item.ChooseOption(item == option);
     }
+
+    public void ChooseOption(int id)
+    {
+        for (int i = 0; i < optionButtons.Count; i++)
+        {
+            optionButtons[i].ChooseOption(i == id);
+        }
+    }
 }

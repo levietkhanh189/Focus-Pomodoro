@@ -8,6 +8,7 @@ public class PomodoroTimer : MonoBehaviour
 {
     public Text buttonText;
     public Text timerText; // Gán trong Inspector
+    public OptionManager optionManager;
     private float timeRemaining;
     private bool isTimerRunning = false;
 
@@ -18,7 +19,8 @@ public class PomodoroTimer : MonoBehaviour
 
     private IEnumerator timerCoroutine;
     private float durationTime = 25 * 60;
-    public OptionManager optionManager;
+    private string mode = "Pomodoro";
+
     public Color[] timerColors;
     private void Awake()
     {
@@ -37,6 +39,7 @@ public class PomodoroTimer : MonoBehaviour
     // Hàm khởi động đếm ngược cho Pomodoro
     public void OptionPomodoro()
     {
+        mode = "Pomodoro";
         OptionSet(pomodoroTime);
         ColorSystem.Instance.ChangeColor(timerColors[0]);
     }
@@ -44,6 +47,7 @@ public class PomodoroTimer : MonoBehaviour
     // Hàm khởi động đếm ngược cho Short Break
     public void OptionShortBreak()
     {
+        mode = "ShortBreak";
         OptionSet(shortBreakTime);
         ColorSystem.Instance.ChangeColor(timerColors[1]);
     }
@@ -51,6 +55,7 @@ public class PomodoroTimer : MonoBehaviour
     // Hàm khởi động đếm ngược cho Long Break
     public void OptionLongBreak()
     {
+        mode = "LongBreak";
         OptionSet(longBreakTime);
         ColorSystem.Instance.ChangeColor(timerColors[2]);
     }
@@ -60,6 +65,7 @@ public class PomodoroTimer : MonoBehaviour
         if (isTimerRunning)
         {
             StopCoroutine(timerCoroutine);
+            isTimerRunning = false;
         }
         buttonText.text = "START";
         durationTime = duration;
@@ -93,6 +99,32 @@ public class PomodoroTimer : MonoBehaviour
         StartCoroutine(timerCoroutine);
     }
 
+    public void WarningPause()
+    {
+        if (isTimerRunning && mode == "Pomodoro")
+        {
+            DTNSoundManagement.instance.Play("Warning");
+            buttonText.text = "START";
+            durationTime = timeRemaining;
+            StopCoroutine(timerCoroutine);
+            isTimerRunning = false;
+        }
+    }
+
+    public void NextTimer()
+    {
+        if (mode == "Pomodoro")
+        {
+            optionManager.ChooseOption(1);
+            OptionShortBreak();
+        }
+        else
+        {
+            optionManager.ChooseOption(0);
+            OptionPomodoro();
+        }
+    }
+
     private IEnumerator Countdown(float duration)
     {
         isTimerRunning = true;
@@ -111,6 +143,14 @@ public class PomodoroTimer : MonoBehaviour
         // Hoàn thành đếm ngược
         buttonText.text = "START";
         timerText.text = "Time's up!";
+        if(mode == "Pomodoro")
+        {
+            OptionShortBreak();
+        }
+        else
+        {
+            OptionPomodoro();
+        }
         isTimerRunning = false;
     }
 
