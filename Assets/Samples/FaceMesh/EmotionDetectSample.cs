@@ -17,8 +17,6 @@ public class EmotionDetectSample : MonoBehaviour
     private void Start()
     {
         emotionDetect = new EmotionDetect(emotionModelFile);
-
-        faceDetectionSample.OnResult = OnResultUpdate;
     }
 
 
@@ -27,17 +25,7 @@ public class EmotionDetectSample : MonoBehaviour
         emotionDetect?.Dispose();
     }
 
-    private void Update()
-    {
-        Debug.Log(emotion);
-    }
 
-    private void OnResultUpdate(FaceDetect.Result result)
-    {
-        emotionDetect.Run(PrepareKeypointsForModel(result));
-
-        emotion = emotionDetect.GetResult();
-    }
     public float[] PrepareKeypointsForModel(FaceDetect.Result result)
     {
         // Tạo một mảng để chứa dữ liệu đầu vào của mô hình, giả sử mỗi keypoint có 2 giá trị (x, y)

@@ -83,34 +83,6 @@ namespace TensorFlowLite
             postprocessPerfMarker.End();
         }
 
-        public virtual void Run(float[] inputKeypoints)
-        {
-            // Pre process
-            preprocessPerfMarker.Begin();
-            PreProcess(inputKeypoints);
-            preprocessPerfMarker.End();
-
-            // Run inference
-            runPerfMarker.Begin();
-            interpreter.Invoke();
-            runPerfMarker.End();
-
-            // Post process
-            postprocessPerfMarker.Begin();
-            PostProcess();
-            postprocessPerfMarker.End();
-        }
-
-        /// <summary>
-        /// Pre process the input float array
-        /// Set all input tensors for the model
-        /// </summary>
-        /// <param name="texture">An input texture</param>
-        protected virtual void PreProcess(float[] inputKeypoints)
-        {
-            interpreter.SetInputTensorData(inputTensorIndex, inputKeypoints);
-        }
-
         /// <summary>
         /// Pre process the input texture
         /// Set all input tensors for the model

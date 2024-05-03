@@ -26,10 +26,9 @@ public class FaceDetectionSample : MonoBehaviour
     private readonly Vector3[] rtCorners = new Vector3[4];
     private Material previewMaterial;
     public Text debugText;
-    public Image noseImage;
+    public RectTransform noseImage;
     private Camera camera;
 
-    public Action<FaceDetect.Result> OnResult;
     private void Start()
     {
         camera = Camera.main;
@@ -71,6 +70,7 @@ public class FaceDetectionSample : MonoBehaviour
         results = faceDetect.GetResults();
     }
     float timeCounter;
+    public RectTransform canvasRectTransform;
     private void DrawResults(List<FaceDetect.Result> results)
     {
         if (results == null || results.Count == 0)
@@ -81,7 +81,7 @@ public class FaceDetectionSample : MonoBehaviour
         float3 min = rtCorners[0];
         float3 max = rtCorners[2];
 
-        draw.color = Color.clear;
+        draw.color = Color.green;
 
         if(results.Count == 0)
         {
@@ -98,8 +98,10 @@ public class FaceDetectionSample : MonoBehaviour
                 draw.Point(math.lerp(min, max, new float3(p.x, 1f - p.y, 0)), -0.1f);
             }
             var noseKeyPoint = results[0].keypoints[(int)FaceDetect.KeyPoint.Nose];
-            OnResult?.Invoke(results[0]);
             FaceDetect.LookDirection direction = results[0].GetLookDirection(0.1f);
+            Debug.Log(noseKeyPoint);
+            var movement = Vector2.Lerp(noseImage.anchoredPosition, new Vector2(noseKeyPoint.x * canvasRectTransform.rect.width, (1 - noseKeyPoint.y) * canvasRectTransform.rect.height), 0.75f);
+            noseImage.anchoredPosition = movement;
 
             if (direction != FaceDetect.LookDirection.Forward)
             {
@@ -138,7 +140,7 @@ public class FaceDetectionSample : MonoBehaviour
     {
         Vector2 screenPosition = new Vector2(noseKeyPoint.x, noseKeyPoint.y);
 
-        noseImage.rectTransform.position = screenPosition;
+        //noseImage.rectTransform.position = screenPosition;
 
     }
 
