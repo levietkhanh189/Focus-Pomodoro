@@ -6,6 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/PomodoroApp/Scenes/MainApp.unity
-    guid: e06f86d6ec7e34da6a731da497286cee
-  m_configObjects: {}
+    path: Assets/RealTimeFaceRecognitionExample/RealTimeFaceRecognitionExample.unity
+  - enabled: 1
+    path: Assets/RealTimeFaceRecognitionExample/ShowLicense.unity
+  - enabled: 1
+    path: Assets/RealTimeFaceRecognitionExample/WebCamTextureRealTimeFaceRecognitionExample/WebCamTextureRealTimeFaceRecognitionExample.unity
