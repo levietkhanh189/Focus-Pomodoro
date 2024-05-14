@@ -11,12 +11,14 @@ public class EmotionDetectSample : MonoBehaviour
     [SerializeField, FilePopup("*.tflite")]
     private string emotionModelFile = "coco_ssd_mobilenet_quant.tflite";
 
-    private EmotionDetect emotionDetect;
+    public EmotionDetect emotionDetect;
     public FaceDetectionSample faceDetectionSample;
     public string emotion;
+    public Texture texture;
     private void Start()
     {
         emotionDetect = new EmotionDetect(emotionModelFile);
+        emotionDetect.Run(texture);
     }
 
 

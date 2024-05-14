@@ -28,7 +28,7 @@ public class FaceDetectionSample : MonoBehaviour
     public Text debugText;
     public RectTransform noseImage;
     private Camera camera;
-
+    public EmotionDetectSample emotionDetect;
     private void Start()
     {
         camera = Camera.main;
@@ -99,8 +99,7 @@ public class FaceDetectionSample : MonoBehaviour
             }
             var noseKeyPoint = results[0].keypoints[(int)FaceDetect.KeyPoint.Nose];
             FaceDetect.LookDirection direction = results[0].GetLookDirection(0.1f);
-            Debug.Log(noseKeyPoint);
-            var movement = Vector2.Lerp(noseImage.anchoredPosition, new Vector2(noseKeyPoint.x * canvasRectTransform.rect.width, (1 - noseKeyPoint.y) * canvasRectTransform.rect.height), 0.75f);
+            var movement = Vector2.Lerp(noseImage.anchoredPosition, new Vector2(noseKeyPoint.x * canvasRectTransform.rect.width, (1 - noseKeyPoint.y) * canvasRectTransform.rect.height), Time.deltaTime*10f);
             noseImage.anchoredPosition = movement;
 
             if (direction != FaceDetect.LookDirection.Forward)
@@ -133,6 +132,9 @@ public class FaceDetectionSample : MonoBehaviour
         //    //   UpdateNosePosition(noseKeyPoint);
         //    debugText.text = "# You look " + result.GetLookDirection(0.085f).ToString();
         //}
+
+        //emotionDetect.emotionDetect.DetectEmotionsForFaces(results, inputPreview.texture);
+
         draw.Apply();
     }
 
