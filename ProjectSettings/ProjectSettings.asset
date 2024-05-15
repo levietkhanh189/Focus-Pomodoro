@@ -158,7 +158,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.enoxsofrware.realtimefacerecognitionexample
+    Android: com.asus4.tfliteunitysample
     Standalone: com.Enox-Software.RealTimeFaceRecognitionExample
     Tizen: com.enoxsofrware.realtimefacerecognitionexample
     iPhone: com.enoxsofrware.realtimefacerecognitionexample
@@ -251,7 +251,7 @@ PlayerSettings:
   clonedFromGUID: b0efa2d7f4da1564fbe507a409d961c7
   templatePackageId: 
   templateDefaultScene: 
-  useCustomMainManifest: 0
+  useCustomMainManifest: 1
   useCustomLauncherManifest: 0
   useCustomMainGradleTemplate: 0
   useCustomLauncherGradleManifest: 0
@@ -876,7 +876,7 @@ PlayerSettings:
     tvOS: 1
   incrementalIl2cppBuild: {}
   suppressCommonWarnings: 1
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   useDeterministicCompilation: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 1
@@ -957,7 +957,7 @@ PlayerSettings:
   embeddedLinuxEnableGamepadInput: 1
   hmiLogStartupTiming: 0
   hmiCpuConfiguration: 
-  apiCompatibilityLevel: 6
+  apiCompatibilityLevel: 3
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
   cloudProjectId: 

@@ -1,47 +1,55 @@
-using System.Linq;
-using TensorFlowLite;
-using TextureSource;
-using Unity.Mathematics;
+using System.Collections;
+using System.Net;
 using UnityEngine;
-using UnityEngine.UI;
-
+using UnityEngine.Networking;
 public class EmotionDetectSample : MonoBehaviour
 {
-    [Header("Model Settings")]
-    [SerializeField, FilePopup("*.tflite")]
-    private string emotionModelFile = "coco_ssd_mobilenet_quant.tflite";
+    public static EmotionDetectSample Instance; 
+    public string baseUrl = "http://localhost:8000/predict/emotion"; // Change to your actual server URL
 
-    public EmotionDetect emotionDetect;
-    public FaceDetectionSample faceDetectionSample;
-    public string emotion;
-    public Texture texture;
-    private void Start()
+    public delegate void ResponseDelegate(string response);
+    public event ResponseDelegate ResponseReceived;
+
+    private void Awake()
     {
-        emotionDetect = new EmotionDetect(emotionModelFile);
-        emotionDetect.Run(texture);
+
+        Instance = this;
+    }
+
+    [Sirenix.OdinInspector.Button]
+    public void UploadTexture(Texture2D texture)
+    {
+        StartCoroutine(SendImageToServer(texture));
     }
 
 
-    private void OnDestroy()
+    public IEnumerator SendImageToServer(Texture2D image)
     {
-        emotionDetect?.Dispose();
-    }
-
-
-    public float[] PrepareKeypointsForModel(FaceDetect.Result result)
-    {
-        // Tạo một mảng để chứa dữ liệu đầu vào của mô hình, giả sử mỗi keypoint có 2 giá trị (x, y)
-        float[] modelInput = new float[result.keypoints.Length * 2];
-
-        for (int i = 0; i < result.keypoints.Length; i++)
+        if (image == null)
         {
-            // Chuyển đổi tọa độ pixel sang chuẩn hóa từ 0 đến 1 nếu chưa chuẩn hóa
-            modelInput[i * 2] = result.keypoints[i].x;
-            modelInput[i * 2 + 1] = result.keypoints[i].y;
-            Debug.Log(result.keypoints[i].y);
+            Debug.LogError("Error: The image is null.");
+            yield break; // Exit the coroutine if the image is null
         }
 
-        return modelInput;
+        byte[] imageData = image.EncodeToJPG();
+        WWWForm form = new WWWForm();
+        form.AddBinaryData("image", imageData, "uploaded_image", "image/jpeg");
+
+        using (UnityWebRequest www = UnityWebRequest.Post(baseUrl, form))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError("Error: " + www.error);
+                ResponseReceived?.Invoke("Error: " + www.error); // Notify listeners about the error
+            }
+            else
+            {
+                Debug.Log("Response: " + www.downloadHandler.text);
+                ResponseReceived?.Invoke(www.downloadHandler.text); // Trigger the response received event
+            }
+        }
     }
 
 }

@@ -110,6 +110,8 @@ public class FaceDetectionSample : MonoBehaviour
                     ModeManager.Instance.WarningPomodoroMode();
                 }
                 debugText.text = "# You look " + direction.ToString();
+                if(PomodoroTimer.person != null)
+                    PomodoroTimer.person.focus -= Time.deltaTime;
             }
             else
             {

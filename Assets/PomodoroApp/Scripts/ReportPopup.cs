@@ -4,10 +4,17 @@ using UnityEngine;
 
 public class ReportPopup : MonoBehaviour
 {
+    public static ReportPopup Instance;
     public List<Person> people = new List<Person>();
     public List<PersonItem> personItems = new List<PersonItem>();
     public Transform content;
     public PersonItem item;
+
+    private void Awake()
+    {
+        Instance = this;
+        Hide();
+    }
 
     public void Show()
     {

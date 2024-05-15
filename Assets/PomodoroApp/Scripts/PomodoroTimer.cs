@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 public class PomodoroTimer : MonoBehaviour
 {
+    public static Person person;
+    public FaceRecognitionClient recognitionClient;
     public Text buttonText;
     public Text timerText; // Gán trong Inspector
     public OptionManager optionManager;
@@ -13,14 +15,14 @@ public class PomodoroTimer : MonoBehaviour
     private bool isTimerRunning = false;
 
     // Thời gian cho mỗi chế độ, đơn vị là giây
-    private const float pomodoroTime = 25 * 60;
-    private const float shortBreakTime = 5 * 60;
-    private const float longBreakTime = 15 * 60;
+    private const float pomodoroTime = 25;//* 60;
+    private const float shortBreakTime = 5;//* 60;
+    private const float longBreakTime = 15; // * 60;
 
     private IEnumerator timerCoroutine;
-    private float durationTime = 25 * 60;
+    private float durationTime = 25;// * 60;
     private string mode = "Pomodoro";
-
+    
     public Color[] timerColors;
     private void Awake()
     {
@@ -72,10 +74,29 @@ public class PomodoroTimer : MonoBehaviour
         UpdateTimerDisplay(durationTime);
     }
 
+    public void SendImageToServer()
+    {
+        Texture2D textureToSave = FilterCamera.instance.TextureToSave();
+        Sprite newSprite = Sprite.Create(textureToSave, new Rect(0.0f, 0.0f, textureToSave.width, textureToSave.height), new Vector2(0.5f, 0.5f), 100.0f);
+        person.icon = newSprite;
+        recognitionClient.SendImageToServer(textureToSave);
+        recognitionClient.Response += ImageInfo;
+    }
+
+    public void ImageInfo(string json)
+    {
+        Response response = JsonUtility.FromJson<Response>(json);
+        if (response.names != null)
+            person.name = response.names[0];
+        else
+            person.name = "Unknown";
+    }
+
     public void StartTimer()
     {
         if (isTimerRunning)
         {
+            person.pause++;
             buttonText.text = "START";
             durationTime = timeRemaining;
             StopCoroutine(timerCoroutine);
@@ -94,15 +115,24 @@ public class PomodoroTimer : MonoBehaviour
         {
             StopCoroutine(timerCoroutine);
         }
-
+        person = new Person();
+        person.focus = 100f;
+        person.emotion = "Happy";
+        SendImageToServer();
         timerCoroutine = Countdown(duration);
         StartCoroutine(timerCoroutine);
+    }
+
+    public void MinusFocus()
+    {
+        person.focus -= Time.deltaTime;
     }
 
     public void WarningPause()
     {
         if (isTimerRunning && mode == "Pomodoro")
         {
+            person.pause++;
             DTNSoundManagement.instance.Play("Warning");
             buttonText.text = "START";
             durationTime = timeRemaining;
@@ -141,6 +171,7 @@ public class PomodoroTimer : MonoBehaviour
         }
 
         // Hoàn thành đếm ngược
+        ReportPopup.Instance.AddPerson(person);
         buttonText.text = "START";
         timerText.text = "Time's up!";
         if(mode == "Pomodoro")

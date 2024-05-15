@@ -8,7 +8,7 @@ using UnityEditor;
 public class FilterCamera : MonoBehaviour
 {
     public Color mainColor;
-    private static FilterCamera instance;
+    public static FilterCamera instance;
 
     public Camera myCamera;
     public RawImage rawImage;
@@ -72,6 +72,11 @@ public class FilterCamera : MonoBehaviour
         SendImageToServer();
     }
 
+    public Texture2D TextureToSave()
+    {
+        return ConvertToTexture2D(rawImage.mainTexture);
+    }
+
     public void SendImageToServer()
     {
         Texture2D textureToSave = ConvertToTexture2D(rawImage.mainTexture);
@@ -82,7 +87,10 @@ public class FilterCamera : MonoBehaviour
     public void ImageInfo(string json)
     {
         Response response = JsonUtility.FromJson<Response>(json);
-        nameText.text = "Name : " + response.names[0];
+        if (response.names != null)
+            nameText.text = "Name : " + response.names[0];
+        else
+            nameText.text = "Name : " + "Unknown";
     }
 
     public Texture2D ConvertToTexture2D(Texture sourceTexture)
