@@ -7,6 +7,7 @@ using System.Collections.Generic;
 public class PomodoroTimer : MonoBehaviour
 {
     public static Person person;
+    public EmotionDetectSample emotionDetect;
     public FaceRecognitionClient recognitionClient;
     public Text buttonText;
     public Text timerText; // Gán trong Inspector
@@ -81,6 +82,15 @@ public class PomodoroTimer : MonoBehaviour
         person.icon = newSprite;
         recognitionClient.SendImageToServer(textureToSave);
         recognitionClient.Response += ImageInfo;
+
+        string path = FilterCamera.instance.TakeScreenshotGetString();
+        emotionDetect.UploadImage(path);
+        emotionDetect.Response += ImageEmotion;
+    }
+
+    public void ImageEmotion(string emotion)
+    {
+        person.emotion = emotion;
     }
 
     public void ImageInfo(string json)

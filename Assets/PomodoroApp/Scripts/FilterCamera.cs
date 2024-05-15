@@ -12,8 +12,10 @@ public class FilterCamera : MonoBehaviour
 
     public Camera myCamera;
     public RawImage rawImage;
-    private int count;
+    private static int count;
     public Text nameText;
+    public Text emotionText;
+    public EmotionDetectSample emotionDetect;
     public InputField inputField;
     public FaceRecognitionClient recognitionClient;
     private void Awake()
@@ -54,9 +56,51 @@ public class FilterCamera : MonoBehaviour
         }
     }
 
+    public string TakeScreenshotGetString()
+    {
+        Texture2D textureToSave = ConvertToTexture2D(rawImage.mainTexture);
+
+        if (textureToSave != null)
+        {
+            // Encode texture into PNG
+            byte[] bytes = textureToSave.EncodeToPNG();
+
+#if UNITY_EDITOR
+            // Create a file path in the Assets folder
+            count++;
+            string filePath = Path.Combine("Assets", "SavedTextures", "Photo_" + count + ".png");
+            // Ensure directory exists
+            string dirPath = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            File.WriteAllBytes(filePath, bytes);
+            // Refresh the AssetDatabase to show the new file in the Editor
+            AssetDatabase.Refresh();
+            Debug.Log("Saved Texture to " + filePath);
+#else
+                Debug.LogError("Texture saving is only supported in the Unity Editor.");
+#endif
+            return filePath;
+        }
+        else
+        {
+            Debug.LogError("No texture found to save!");
+            return null;
+        }
+    }
+
     public void TakeAPhoto()
     {
-        TakeScreenshot();
+        string path = TakeScreenshotGetString();
+        emotionDetect.UploadImage(path);
+        emotionDetect.Response += ImageEmotion;
+    }
+
+    public void ImageEmotion(string emotion)
+    {
+        emotionText.text = emotion;
     }
 
     public void RegisterFace()

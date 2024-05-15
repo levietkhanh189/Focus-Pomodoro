@@ -1,55 +1,61 @@
 using System.Collections;
-using System.Net;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
+using System;
+
 public class EmotionDetectSample : MonoBehaviour
 {
     public static EmotionDetectSample Instance; 
     public string baseUrl = "http://localhost:8000/predict/emotion"; // Change to your actual server URL
 
-    public delegate void ResponseDelegate(string response);
-    public event ResponseDelegate ResponseReceived;
+    public Action<string> Response;
 
     private void Awake()
     {
-
         Instance = this;
     }
 
     [Sirenix.OdinInspector.Button]
-    public void UploadTexture(Texture2D texture)
+    public void UploadImage(string imagePath)
     {
-        StartCoroutine(SendImageToServer(texture));
+        StartCoroutine(UploadImageCoroutine(imagePath));
     }
 
-
-    public IEnumerator SendImageToServer(Texture2D image)
+    IEnumerator UploadImageCoroutine(string imagePath)
     {
-        if (image == null)
-        {
-            Debug.LogError("Error: The image is null.");
-            yield break; // Exit the coroutine if the image is null
-        }
+        byte[] imageData = File.ReadAllBytes(imagePath);
+        UnityWebRequest www = UnityWebRequest.Post(baseUrl, CreateForm(imageData, Path.GetFileName(imagePath)));
+        yield return www.SendWebRequest();
 
-        byte[] imageData = image.EncodeToJPG();
+        if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.LogError("Error: " + www.error);
+        }
+        else
+        {
+            Debug.Log("Response: " + www.downloadHandler.text);
+            Emotion emotion = JsonUtility.FromJson<Emotion>(www.downloadHandler.text);
+            Response?.Invoke(emotion.emotion);
+            Response = null;
+        }
+    }
+
+    // Helper method to create form for the request
+    private WWWForm CreateForm(byte[] imageData, string fileName)
+    {
         WWWForm form = new WWWForm();
-        form.AddBinaryData("image", imageData, "uploaded_image", "image/jpeg");
-
-        using (UnityWebRequest www = UnityWebRequest.Post(baseUrl, form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError("Error: " + www.error);
-                ResponseReceived?.Invoke("Error: " + www.error); // Notify listeners about the error
-            }
-            else
-            {
-                Debug.Log("Response: " + www.downloadHandler.text);
-                ResponseReceived?.Invoke(www.downloadHandler.text); // Trigger the response received event
-            }
-        }
+        form.AddBinaryData("file", imageData, fileName, "image/png"); // Change "image/png" based on actual image type
+        return form;
     }
 
+}
+[System.Serializable]
+public class Emotion
+{
+    public string emotion;
+    public int h;
+    public int w;
+    public int x;
+    public int y;
 }
