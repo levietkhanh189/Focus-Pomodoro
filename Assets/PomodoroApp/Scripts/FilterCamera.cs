@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
+using UnityEditor;
 
 public class FilterCamera : MonoBehaviour
 {
@@ -9,49 +11,120 @@ public class FilterCamera : MonoBehaviour
     private static FilterCamera instance;
 
     public Camera myCamera;
-    private bool takeScreenshotOnNextFrame;
-
+    public RawImage rawImage;
+    private int count;
+    public Text nameText;
+    public InputField inputField;
+    public FaceRecognitionClient recognitionClient;
     private void Awake()
     {
         instance = this;
     }
 
-    private void OnPostRender()
+    public void TakeScreenshot()
     {
-        if (takeScreenshotOnNextFrame)
+        Texture2D textureToSave = ConvertToTexture2D(rawImage.mainTexture);
+
+        if (textureToSave != null)
         {
-            takeScreenshotOnNextFrame = false;
-            RenderTexture renderTexture = myCamera.targetTexture;
+            // Encode texture into PNG
+            byte[] bytes = textureToSave.EncodeToPNG();
 
-            Texture2D renderResult = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.ARGB32, false);
-            Rect rect = new Rect(0, 0, renderTexture.width, renderTexture.height);
-            renderResult.ReadPixels(rect, 0, 0);
-            renderResult.Apply();
-
-            byte[] byteArray = renderResult.EncodeToPNG();
-            string filePath = Path.Combine(Application.persistentDataPath, "screenshot.png");
-            File.WriteAllBytes(filePath, byteArray);
-            Debug.Log($"Saved screenshot to {filePath}");
-
-            RenderTexture.ReleaseTemporary(renderTexture);
-            myCamera.targetTexture = null;
+#if UNITY_EDITOR
+            // Create a file path in the Assets folder
+            count++;
+            string filePath = Path.Combine("Assets", "SavedTextures", "Photo_"+count+".png");
+            // Ensure directory exists
+            string dirPath = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            File.WriteAllBytes(filePath, bytes);
+            // Refresh the AssetDatabase to show the new file in the Editor
+            AssetDatabase.Refresh();
+            Debug.Log("Saved Texture to " + filePath);
+#else
+                Debug.LogError("Texture saving is only supported in the Unity Editor.");
+#endif
         }
-    }
-
-    public static void TakeScreenshot(int width, int height)
-    {
-        instance.myCamera.targetTexture = RenderTexture.GetTemporary(width, height, 16);
-        instance.takeScreenshotOnNextFrame = true;
+        else
+        {
+            Debug.LogError("No texture found to save!");
+        }
     }
 
     public void TakeAPhoto()
     {
-        int screenWidth = Screen.width;
-        TakeScreenshot(screenWidth, screenWidth);
+        TakeScreenshot();
+    }
+
+    public void RegisterFace()
+    {
+        Texture2D textureToSave = ConvertToTexture2D(rawImage.mainTexture);
+        recognitionClient.RegisterFace(textureToSave,inputField.text);
+        SendImageToServer();
     }
 
     public void FilterOn()
     {
         ColorSystem.Instance.ChangeColor(mainColor);
+        SendImageToServer();
     }
+
+    public void SendImageToServer()
+    {
+        Texture2D textureToSave = ConvertToTexture2D(rawImage.mainTexture);
+        recognitionClient.SendImageToServer(textureToSave);
+        recognitionClient.Response += ImageInfo;
+    }
+
+    public void ImageInfo(string json)
+    {
+        Response response = JsonUtility.FromJson<Response>(json);
+        nameText.text = "Name : " + response.names[0];
+    }
+
+    public Texture2D ConvertToTexture2D(Texture sourceTexture)
+    {
+        if (sourceTexture == null)
+        {
+            Debug.LogError("Source texture is null");
+            return null;
+        }
+
+        // Create a temporary RenderTexture of the same size as the source texture
+        RenderTexture tempRT = RenderTexture.GetTemporary(
+                                sourceTexture.width,
+                                sourceTexture.height,
+                                0,
+                                RenderTextureFormat.Default,
+                                RenderTextureReadWrite.Linear);
+
+        // Blit the pixels on texture to the RenderTexture
+        Graphics.Blit(sourceTexture, tempRT);
+
+        // Backup the currently set RenderTexture
+        RenderTexture previous = RenderTexture.active;
+
+        // Set the current RenderTexture to the temporary one we created
+        RenderTexture.active = tempRT;
+
+        // Create a new Texture2D and read the RenderTexture image into it
+        Texture2D newTexture = new Texture2D(sourceTexture.width, sourceTexture.height);
+        newTexture.ReadPixels(new Rect(0, 0, tempRT.width, tempRT.height), 0, 0);
+        newTexture.Apply();
+
+        // Reset the active RenderTexture
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(tempRT);
+
+        return newTexture;
+    }
+}
+
+[System.Serializable]
+public class Response
+{
+    public List<string> names;
 }

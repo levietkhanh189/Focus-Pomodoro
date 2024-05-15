@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
-
+using System;
 public class FaceRecognitionClient : MonoBehaviour
 {
     public string url;
-
+    public string jsonResponse;
+    public Action<string> Response;
     [Sirenix.OdinInspector.Button]
     public void SendImageToServer(Texture2D image)
     {
@@ -30,6 +31,8 @@ public class FaceRecognitionClient : MonoBehaviour
             Debug.Log("Response: " + www.downloadHandler.text);
             // Process the response to show recognized names in Unity
             string jsonResponse = www.downloadHandler.text;
+            Response?.Invoke(jsonResponse);
+            Response = null;
             // You can parse the jsonResponse to get the names
         }
     }
